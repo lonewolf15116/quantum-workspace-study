@@ -124,6 +124,7 @@ def main():
     p.add_argument("--arm",choices=list(ARMS),default="K")
     p.add_argument("--seed",type=int,choices=[101,202,303],default=202)
     p.add_argument("--steps",type=int,default=None)
+    p.add_argument("--layers",type=int,choices=[12,24,40],default=12)
     p.add_argument("--device",choices=["cuda","cpu"],default="cuda")
     p.add_argument("--smoke",action="store_true")
     args=p.parse_args()
@@ -143,13 +144,13 @@ def main():
         tr=tr[:32];within=within[:32];held=held[:32];args.steps=2
     device=args.device
     torch.manual_seed(args.seed)
-    model=GateDAG().to(device)
+    model=GateDAG(layers=args.layers).to(device)
     optimizer=torch.optim.AdamW(model.parameters(),lr=0.001,weight_decay=0.01)
     order=np.random.default_rng(args.seed);perm=np.empty(0,dtype=np.int64);cursor=0
     out=Path(args.out);out.mkdir(parents=True,exist_ok=False)
     identity={"protocol":PROTOCOL,"P002_dataset_manifest":str(Path(args.data)/"manifest.json"),
               "source_sha256":hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-              "arm":args.arm,"seed":args.seed,"steps":args.steps,"torch":torch.__version__,
+              "arm":args.arm,"seed":args.seed,"steps":args.steps,"layers":args.layers,"torch":torch.__version__,
               "device":device,"parameters":sum(p.numel() for p in model.parameters()),
               "train_n":len(tr),"within_n":len(within),"holdout_n":len(held),
               "NOTES":"Not compute matched to transformer. Exploratory architecture baseline."}
