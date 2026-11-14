@@ -18,17 +18,17 @@ NODES=120
 EDGES=240
 BATCH=32
 
-def load_dataset(folder):
+def load_dataset(folder,smoke=False):
     folder=Path(folder)
     manifest=json.loads((folder/"manifest.json").read_text())
-    if manifest.get("protocol")!="P002-DATA-001-CANDIDATE" or manifest.get("smoke"):
+    if manifest.get("protocol")!="P002-DATA-001-CANDIDATE" or (manifest.get("smoke") and not smoke):
         raise RuntimeError("Expected complete P002 data and manifest")
     for name in ("templates.json","instances.json"):
         digest=hashlib.sha256((folder/name).read_bytes()).hexdigest()
         if digest!=manifest["file_sha256"][name]:raise RuntimeError("Dataset hash mismatch "+name)
     templates=json.loads((folder/"templates.json").read_text())
     instances=json.loads((folder/"instances.json").read_text())
-    assert len(templates)==2016 and len(instances)==45864
+    if not smoke:assert len(templates)==2016 and len(instances)==45864
     return templates,instances,manifest
 
 def graph_features(template,row):
@@ -128,7 +128,7 @@ def main():
     p.add_argument("--smoke",action="store_true")
     args=p.parse_args()
     if args.device=="cuda" and not torch.cuda.is_available():raise RuntimeError("CUDA unavailable")
-    templates,rows,manifest=load_dataset(args.data)
+    templates,rows,manifest=load_dataset(args.data,smoke=args.smoke)
     templates={x["template"]:x for x in templates}
     features=[graph_features(templates[x["template"]],x) for x in rows]
     K,A=ARMS[args.arm]
@@ -136,7 +136,7 @@ def main():
                  r["ordinal"]<K and r["angle_ordinal"]<A],dtype=np.int64)
     within=np.array([i for i,r in enumerate(rows) if r["panel"]=="within" and r["ordinal"]<K],dtype=np.int64)
     held=np.array([i for i,r in enumerate(rows) if r["panel"]=="holdout"],dtype=np.int64)
-    assert len(tr)==63*K*A and len(held)==504
+    if not args.smoke:assert len(tr)==63*K*A and len(held)==504
     if args.smoke:
         tr=tr[:32];within=within[:32];held=held[:32];args.steps=2
     device=args.device
