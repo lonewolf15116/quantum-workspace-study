@@ -1,0 +1,21 @@
+name: Inspect pilot reports
+
+on:
+  push:
+    paths:
+      - 'scripts/inspect_pilot_reports.py'
+      - '.github/workflows/inspect-pilot-reports.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and reassemble archives
+        run: python3 scripts/reassemble_evidence.py
+      - name: Show pilot findings and diagnostic results
+        run: python3 scripts/inspect_pilot_reports.py
