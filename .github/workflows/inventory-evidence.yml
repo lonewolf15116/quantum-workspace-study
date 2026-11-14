@@ -1,0 +1,26 @@
+name: Inventory pilot evidence
+on:
+  push:
+    paths:
+      - 'scripts/inventory_evidence.py'
+      - '.github/workflows/inventory-evidence.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reassemble and verify archives
+        run: python3 scripts/reassemble_evidence.py
+      - name: Inspect archived files without extraction
+        run: python3 scripts/inventory_evidence.py
+      - name: Publish evidence inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-inventory
+          path: evidence_inventory.json
+          retention-days: 14
