@@ -13,7 +13,7 @@ import torch
 from torch import nn
 
 PROTOCOL="P002-GRAPH-001-CANDIDATE"
-ARMS={"B":(6,4),"A":(6,20),"K":(30,4)}
+ARMS={"B":(6,4),"A":(6,20),"K":(30,4),"L":(6,4)}
 NODES=120
 EDGES=240
 BATCH=32
@@ -123,10 +123,12 @@ def main():
     p.add_argument("--out",default="p002_graph_results")
     p.add_argument("--arm",choices=list(ARMS),default="K")
     p.add_argument("--seed",type=int,choices=[101,202,303],default=202)
-    p.add_argument("--steps",type=int,default=384)
+    p.add_argument("--steps",type=int,default=None)
     p.add_argument("--device",choices=["cuda","cpu"],default="cuda")
     p.add_argument("--smoke",action="store_true")
     args=p.parse_args()
+    if args.steps is None:args.steps=1920 if args.arm=="L" else 384
+    if args.steps<=0:raise ValueError("steps must be positive")
     if args.device=="cuda" and not torch.cuda.is_available():raise RuntimeError("CUDA unavailable")
     templates,rows,manifest=load_dataset(args.data,smoke=args.smoke)
     templates={x["template"]:x for x in templates}
@@ -173,7 +175,7 @@ def main():
                     "heldout":score(model,features,held,device)}
                 cl.write(json.dumps(record)+"\n");cl.flush()
                 print(json.dumps({"step":step,"train":record["train"]["mae"],
-                    "within":record["within"]["mae"],"heldout":record["heldout"]["mae"],
-                    "zero":record["heldout"]["zero_mae"]}),flush=True)
+                    "within":record["within"]["mae"],"within_zero":record["within"]["zero_mae"],
+                    "heldout":record["heldout"]["mae"],"zero":record["heldout"]["zero_mae"]}),flush=True)
     (out/"summary.json").write_text(json.dumps({"status":"completed","elapsed_s":time.perf_counter()-start},indent=2)+"\n")
 if __name__=="__main__":main()
