@@ -1,0 +1,16 @@
+name: P002 graph depth CUDA preflight static check
+on:
+  push:
+    paths:
+      - 'scripts/bench_p002_graph_depth_cuda.py'
+      - '.github/workflows/p002-graph-depth-preflight-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m py_compile scripts/bench_p002_graph_depth_cuda.py
+      - run: python3 -m py_compile scripts/run_p002_graph_baseline.py
