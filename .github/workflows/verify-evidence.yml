@@ -1,0 +1,21 @@
+name: Verify evidence archives
+
+on:
+  push:
+    paths:
+      - 'evidence/**'
+      - 'SHA256SUMS'
+      - 'scripts/reassemble_evidence.py'
+      - '.github/workflows/verify-evidence.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reassemble archives and verify SHA-256
+        run: python3 scripts/reassemble_evidence.py
