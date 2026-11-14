@@ -32,6 +32,7 @@ def run(smoke=False, out=None):
     simulate, source_sha = archived_simulator()
     rng = {key: np.random.Generator(np.random.PCG64(seed)) for key,seed in SEEDS.items()}
     # Fresh topology/angle streams disjoint from P001; ledger ordered canonically.
+    initial_rng_states={k:v.bit_generator.state for k,v in rng.items()}
     seen=set(); ledger=[]; instances=[]; collisions=0
     cells = [(n,r,f) for n in range(4,11) for r in (2,4,6) for f in FAMILIES]
     if smoke:cells=cells[:1]
@@ -73,7 +74,10 @@ def run(smoke=False, out=None):
     assert len(instances)==expected,(len(instances),expected)
     manifest=dict(protocol=PROTOCOL,smoke=smoke,cells=len(cells),kmax=kmax,amax=amax,
         a_within=awithin,k_holdout=KHOLD,a_holdout=AHOLD,
-        source_sha256=source_sha,seeds=SEEDS,python=platform.python_version(),numpy=np.__version__,
+        source_sha256=source_sha,generator_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        seeds=SEEDS,initial_rng_states=initial_rng_states,
+        final_rng_states={k:v.bit_generator.state for k,v in rng.items()},
+        python=platform.python_version(),numpy=np.__version__,
         template_count=len(ledger),instance_count=len(instances),duplicate_draws=collisions,
         train_instances=sum(r["panel"]=="train" for r in instances),
         within_instances=sum(r["panel"]=="within" for r in instances),
