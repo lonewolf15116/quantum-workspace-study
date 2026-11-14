@@ -128,7 +128,7 @@ def run(arm,seed,rows,mod,device,outdir,smoke=False):
         "training_n":len(train),"within_n":len(panels["within"]),"holdout_n":len(panels["holdout"])},indent=2)+"\n")
     baseline=constant_and_observable_baselines(rows,panels) if not smoke else None
     if baseline is not None:
-        (outdir/"training_only_baselines.json").write_text(json.dumps(baseline,indent=2)+"\\n")
+        (outdir/"training_only_baselines.json").write_text(json.dumps(baseline,indent=2)+"\n")
     start=time.perf_counter()
     with (outdir/"steps.jsonl").open("w") as sl, (outdir/"checkpoints.jsonl").open("w") as cl:
         for step in range(steps+1):
