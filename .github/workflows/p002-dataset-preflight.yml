@@ -1,0 +1,39 @@
+name: P002 dataset preflight
+on:
+  push:
+    paths:
+      - 'scripts/generate_p002_data.py'
+      - '.github/workflows/p002-dataset-preflight.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install numpy
+      - run: python scripts/reassemble_evidence.py
+      - run: python -m py_compile scripts/generate_p002_data.py
+      - run: python scripts/generate_p002_data.py --smoke --out p002_smoke_a
+      - run: python scripts/generate_p002_data.py --smoke --out p002_smoke_b
+      - name: Reproducible and disjoint panels
+        run: |
+          python - <<'PY'
+          import json,hashlib,pathlib
+          a=pathlib.Path("p002_smoke_a");b=pathlib.Path("p002_smoke_b")
+          for name in ("templates.json","instances.json","manifest.json"):
+              assert (a/name).read_bytes()==(b/name).read_bytes(),name
+          rows=json.loads((a/"instances.json").read_text())
+          s={}
+          for row in rows:
+              s.setdefault(row["template"],set()).add(row["panel"])
+          assert all(p in ({"train","within"},{"holdout"}) for p in s.values())
+          assert sum(r["panel"]=="train" for r in rows)==9
+          assert sum(r["panel"]=="within" for r in rows)==6
+          assert sum(r["panel"]=="holdout" for r in rows)==8
+          print("P002_SMOKE_PASS deterministic, disjoint, 5 templates / 23 labelled instances")
+          PY
