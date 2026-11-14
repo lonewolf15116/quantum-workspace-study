@@ -1,0 +1,43 @@
+name: P002 product and graph chain smoke
+on:
+  push:
+    paths:
+      - 'scripts/check_p002_product_state.py'
+      - 'scripts/audit_p002_graph_chains.py'
+      - '.github/workflows/p002-product-chain-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install numpy "torch==2.10.0" --index-url https://download.pytorch.org/whl/cpu
+      - run: python scripts/reassemble_evidence.py
+      - run: python -m py_compile scripts/check_p002_product_state.py scripts/audit_p002_graph_chains.py
+      - run: python scripts/generate_p002_data.py --smoke --out p002_small_chain_data
+      - run: python scripts/audit_p002_graph_chains.py --data p002_small_chain_data --out p002_small_chain_audit.json
+      - run: python scripts/check_p002_product_state.py --smoke --device cpu --out p002_product_smoke
+      - name: Validate audit and product output
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('p002_small_chain_audit.json').read_text())
+          assert a['all_templates']['count']==5
+          assert 0<=a['all_templates']['fraction_greater_than_12']<=1
+          p=Path('p002_product_smoke')
+          assert json.loads((p/'summary.json').read_text())['status']=='completed'
+          steps=[json.loads(s) for s in (p/'steps.jsonl').read_text().splitlines()]
+          assert len(steps)==2
+          checkpoints=[json.loads(s) for s in (p/'checkpoints.jsonl').read_text().splitlines()]
+          assert [c['step'] for c in checkpoints]==[0,2]
+          assert checkpoints[-1]['validation']['instances']==32
+          assert checkpoints[-1]['observable_types']['Z_zero_mae']>0
+          print('P002_PRODUCT_CHAIN_SMOKE_PASS')
+          PY
