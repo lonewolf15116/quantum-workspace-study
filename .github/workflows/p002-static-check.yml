@@ -1,0 +1,17 @@
+name: P002 scripts static checks
+on:
+  push:
+    paths:
+      - 'scripts/run_p002_probes.py'
+      - 'roadmap/P002_PROBES_FREEZE_001.md'
+      - '.github/workflows/p002-static-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m py_compile scripts/bench_archived_model_d128.py scripts/run_p002_probes.py
+      - run: python3 scripts/reassemble_evidence.py
