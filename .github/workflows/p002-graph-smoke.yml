@@ -21,4 +21,18 @@ jobs:
       - run: python -m py_compile scripts/run_p002_graph_baseline.py
       - run: python scripts/generate_p002_data.py --smoke --out p002_graph_smoke_data
       - run: python scripts/run_p002_graph_baseline.py --smoke --device cpu --data p002_graph_smoke_data --out p002_graph_smoke_results --arm K --seed 202
-      - run: python -c "import json; from pathlib import Path; p=Path('p002_graph_smoke_results'); assert json.loads((p/'summary.json').read_text())['status']=='completed'; assert len((p/'steps.jsonl').read_text().splitlines())==2; print('GRAPH_SMOKE_PASS')"
+      - run: python scripts/run_p002_graph_baseline.py --smoke --device cpu --data p002_graph_smoke_data --out p002_graph_L_smoke_results --arm L --seed 202
+      - name: Validate B/K and L smoke results
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for name in ('p002_graph_smoke_results','p002_graph_L_smoke_results'):
+              p=Path(name)
+              assert json.loads((p/'summary.json').read_text())['status']=='completed'
+              assert len((p/'steps.jsonl').read_text().splitlines())==2
+              checks=[json.loads(s) for s in (p/'checkpoints.jsonl').read_text().splitlines()]
+              assert checks[-1]['step']==2
+              assert checks[-1]['within']['zero_mae']>0
+          print('GRAPH_K_L_SMOKE_PASS')
+          PY
