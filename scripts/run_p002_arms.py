@@ -71,6 +71,42 @@ def subgroup_scores(model,arrays,y,mask,ids,rows):
     return out
 
 
+
+def constant_and_observable_baselines(rows,panels):
+    # The median for absolute error is derived exclusively from training labels.
+    output={"training_only_median_mae":{},"zero_mae":{}}
+    medians={}
+    for n in range(4,11):
+        selected=[rows[i]["labels"] for i in panels["train"] if rows[i]["n"]==n]
+        medians[n]=np.median(np.asarray(selected,dtype=float),axis=0)
+    for name,ids in panels.items():
+        errs=[];zeros=[]
+        for i in ids:
+            row=rows[i];labels=np.asarray(row["labels"],dtype=float)
+            errs.append(np.mean(np.abs(medians[row["n"]]-labels)))
+            zeros.append(np.mean(np.abs(labels)))
+        output["training_only_median_mae"][name]=float(np.mean(errs))
+        output["zero_mae"][name]=float(np.mean(zeros))
+    return output
+
+
+def observable_type_metrics(model,arrays,y,mask,ids,rows):
+    model.eval(); z_errors=[];zz_errors=[];z_zero=[];zz_zero=[]
+    with torch.inference_mode():
+        for chunk in np.array_split(ids,math.ceil(len(ids)/32)):
+            ix=torch.as_tensor(chunk,device=y.device)
+            predictions=model([a[ix] for a in arrays]).cpu().numpy()
+            labels=y[ix].cpu().numpy()
+            for local,global_id in enumerate(chunk):
+                n=rows[int(global_id)]["n"]
+                q=n*(n+1)//2
+                z_errors.append(float(np.mean(np.abs(predictions[local,:n]-labels[local,:n]))))
+                zz_errors.append(float(np.mean(np.abs(predictions[local,n:q]-labels[local,n:q]))))
+                z_zero.append(float(np.mean(np.abs(labels[local,:n]))))
+                zz_zero.append(float(np.mean(np.abs(labels[local,n:q]))))
+    return {"Z_mae":float(np.mean(z_errors)),"ZZ_mae":float(np.mean(zz_errors)),
+            "Z_zero_mae":float(np.mean(z_zero)),"ZZ_zero_mae":float(np.mean(zz_zero))}
+
 def run(arm,seed,rows,mod,device,outdir,smoke=False):
     K,A,steps=ARMS[arm]
     if smoke:K,A,steps=2,2,2
@@ -90,6 +126,9 @@ def run(arm,seed,rows,mod,device,outdir,smoke=False):
     (outdir/"settings.json").write_text(json.dumps({"protocol":PROTOCOL,"arm":arm,"seed":seed,
         "K":K,"A":A,"updates":steps,"batch":BATCH,"device":device,"torch":torch.__version__,
         "training_n":len(train),"within_n":len(panels["within"]),"holdout_n":len(panels["holdout"])},indent=2)+"\n")
+    baseline=constant_and_observable_baselines(rows,panels) if not smoke else None
+    if baseline is not None:
+        (outdir/"training_only_baselines.json").write_text(json.dumps(baseline,indent=2)+"\\n")
     start=time.perf_counter()
     with (outdir/"steps.jsonl").open("w") as sl, (outdir/"checkpoints.jsonl").open("w") as cl:
         for step in range(steps+1):
@@ -113,6 +152,9 @@ def run(arm,seed,rows,mod,device,outdir,smoke=False):
                 rec={"step":step,"panels":eval_panels(model,arrays,y,mask,panels)}
                 if step==steps and not smoke:
                     rec["holdout_diagnostics"]=subgroup_scores(model,arrays,y,mask,panels["holdout"],rows)
+                    rec["observable_types"]={name:observable_type_metrics(model,arrays,y,mask,ids,rows)
+                                             for name,ids in panels.items()}
+                    rec["training_only_baselines"]=baseline
                 cl.write(json.dumps(rec)+"\n");cl.flush()
                 print(json.dumps({"arm":arm,"seed":seed,"step":step,
                     "train":rec["panels"]["train"]["mae"],"within":rec["panels"]["within"]["mae"],
