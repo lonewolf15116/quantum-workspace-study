@@ -22,17 +22,21 @@ jobs:
       - run: python scripts/generate_p002_data.py --smoke --out p002_graph_smoke_data
       - run: python scripts/run_p002_graph_baseline.py --smoke --device cpu --data p002_graph_smoke_data --out p002_graph_smoke_results --arm K --seed 202
       - run: python scripts/run_p002_graph_baseline.py --smoke --device cpu --data p002_graph_smoke_data --out p002_graph_L_smoke_results --arm L --seed 202
+      - run: python scripts/run_p002_graph_baseline.py --smoke --device cpu --data p002_graph_smoke_data --out p002_graph_24_smoke --arm K --seed 202 --layers 24
+      - run: python scripts/run_p002_graph_baseline.py --smoke --device cpu --data p002_graph_smoke_data --out p002_graph_40_smoke --arm K --seed 202 --layers 40
       - name: Validate B/K and L smoke results
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          for name in ('p002_graph_smoke_results','p002_graph_L_smoke_results'):
+          for name in ('p002_graph_smoke_results','p002_graph_L_smoke_results','p002_graph_24_smoke','p002_graph_40_smoke'):
               p=Path(name)
               assert json.loads((p/'summary.json').read_text())['status']=='completed'
               assert len((p/'steps.jsonl').read_text().splitlines())==2
               checks=[json.loads(s) for s in (p/'checkpoints.jsonl').read_text().splitlines()]
               assert checks[-1]['step']==2
               assert checks[-1]['within']['zero_mae']>0
-          print('GRAPH_K_L_SMOKE_PASS')
+          assert json.loads((Path('p002_graph_24_smoke')/'identity.json').read_text())['layers']==24
+          assert json.loads((Path('p002_graph_40_smoke')/'identity.json').read_text())['layers']==40
+          print('GRAPH_K_L_DEPTH_SMOKE_PASS')
           PY
