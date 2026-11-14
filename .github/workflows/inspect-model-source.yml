@@ -1,0 +1,16 @@
+name: Inspect exact pilot model source
+on:
+  push:
+    paths:
+      - 'scripts/inspect_model_source.py'
+      - '.github/workflows/inspect-model-source.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/reassemble_evidence.py
+      - run: python3 scripts/inspect_model_source.py
