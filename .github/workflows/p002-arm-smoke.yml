@@ -1,0 +1,37 @@
+name: P002 four-arm execution smoke
+on:
+  push:
+    paths:
+      - 'scripts/run_p002_arms.py'
+      - '.github/workflows/p002-arm-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install numpy "torch==2.10.0" --index-url https://download.pytorch.org/whl/cpu
+      - run: python scripts/reassemble_evidence.py
+      - run: python -m py_compile scripts/generate_p002_data.py scripts/run_p002_arms.py
+      - run: python scripts/generate_p002_data.py --smoke --out p002_smoke_data
+      - run: python scripts/run_p002_arms.py --smoke --data p002_smoke_data --out p002_smoke_results --device cpu --arm B
+      - name: Validate recorded results
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("p002_smoke_results/B_s101")
+          assert json.loads((p/"summary.json").read_text())["completed_updates"]==2
+          rows=[json.loads(x) for x in (p/"steps.jsonl").read_text().splitlines()]
+          assert len(rows)==2 and all(r["mse"]>=0 for r in rows)
+          checkpoints=[json.loads(x) for x in (p/"checkpoints.jsonl").read_text().splitlines()]
+          assert [x["step"] for x in checkpoints]==[0,2]
+          assert all(x["panels"]["holdout"]["n_instances"]==8 for x in checkpoints)
+          print("P002_ARM_SMOKE_PASS")
+          PY
