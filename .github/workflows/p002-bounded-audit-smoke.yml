@@ -1,0 +1,45 @@
+name: P002 bounded audit smoke
+on:
+  push:
+    paths:
+      - 'scripts/audit_p002_labels.py'
+      - 'scripts/check_p002_entangled_overfit.py'
+      - '.github/workflows/p002-bounded-audit-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install numpy "torch==2.10.0" --index-url https://download.pytorch.org/whl/cpu
+      - run: python scripts/reassemble_evidence.py
+      - run: python -m py_compile scripts/audit_p002_labels.py scripts/check_p002_entangled_overfit.py
+      - run: python scripts/generate_p002_data.py --smoke --out p002_audit_small_data
+      - run: python scripts/check_p002_entangled_overfit.py --smoke --device cpu --data p002_audit_small_data --out p002_entangled_smoke
+      - name: Validate audit logic and smoke output
+        run: |
+          python - <<'PY'
+          import json, sys
+          from pathlib import Path
+          sys.path.insert(0, 'scripts')
+          from audit_p002_labels import flatten, panel_summary, baseline_by_observable
+          train=[dict(n=4,labels=[1.,-1.,0.,.5]+[.2]*6)]
+          test=[dict(n=4,labels=[0.,0.,0.,0.]+[0.]*6)]
+          assert abs(flatten(train,"Z").mean()-.125)<1e-9
+          assert abs(flatten(train,"ZZ").mean()-.2)<1e-9
+          assert baseline_by_observable(train,test,"mean")>0
+          assert "Z" in panel_summary(test,train)
+          p=Path('p002_entangled_smoke')
+          assert json.loads((p/'summary.json').read_text())['status']=='completed'
+          checks=[json.loads(s) for s in (p/'checkpoints.jsonl').read_text().splitlines()]
+          assert [x['step'] for x in checks]==[0,2]
+          assert checks[-1]['train_by_observable']['Z']['zero_mae']>=0
+          assert checks[-1]['within_by_observable']['ZZ']['zero_mae']>=0
+          print('BOUNDED_AUDIT_SMOKE_PASS')
+          PY
