@@ -35,3 +35,14 @@ Write-Host "Exit code: $LASTEXITCODE"
 - **Review:** v0.6 not yet externally reviewed; no signed-off independent replication.
 
 **Decision:** HOLD arXiv, no public release and no new model training.
+
+
+## Post-review source audit update — 2026-11-15
+
+**Local run reported by researcher:** `scripts/audit_p002_transformer_source.py` → `PASS_SOURCE_IDENTITY`, exit code 0. Exact W=0 parameter count: **815,233**. Both SHA-256 identity checks passed:
+
+- Original archive model: `c591d3d59d421b118a4900379682f637fecf47ee2159ff815b40147c40b793d8`.
+- Dimension-substituted effective model: `2e1e2c6388548e2e5b022570d448fb46b327db42d17c8dad32c0831b59763721`.
+- CPU `pack()` result for first frozen instance: integer arrays indices 0–4 of shape [179], angle feature index 5 [179,2] float32, scalar integer fields indices 6–8 (observed values 16, 10, 4). Protocol `protocol/Workspace_Study_Step_01.md` describes the intended gate, observable, position/role and sine/cosine encoding, but **the semantic mapping of archived source must be verified against the generated `p002_transformer_model_and_pack_source.txt` before claiming it is confirmed**.
+
+**P2 updated:** Parameter-count and archived source-identity subgates **PASSED LOCALLY**; exact implementation-level tokenization and position encoding **OPEN pending source-excerpt inspection**. This was an architecture-introspection run, not model retraining or independent reproduction. Manuscript v0.7 reflects this distinction. The repository and ZIP remain private, with no public-release authorization.
