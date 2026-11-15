@@ -47,7 +47,7 @@ def main():
     parser.add_argument("--root",default=".")
     parser.add_argument("--out",default="p002_reproducibility_candidate.zip")
     parser.add_argument("--include-dataset",action="store_true")
-    parser.add_argument("--allow-partial",action="store_true",
+    parser.add_argument("--extra-file",action="append",default=[],\n        help="Explicit relative file to include (repeat for transformer/product-state provenance)")\n    parser.add_argument("--allow-partial",action="store_true",
         help="Allow missing optional artifacts but record omissions clearly")
     args=parser.parse_args()
     root=Path(args.root).resolve()
@@ -55,7 +55,7 @@ def main():
     if output.exists():parser.error("Refusing to overwrite "+str(output))
     if root in output.parents and output.parent != root:
         parser.error("Output should be placed at repo root or outside it")
-    selected=SOURCES+FILES+(DATASET if args.include_dataset else ["p002_dataset/manifest.json"])
+    selected=SOURCES+FILES+args.extra_file+(DATASET if args.include_dataset else ["p002_dataset/manifest.json"])
     for dirname in DIRS:
         candidate=root/dirname
         if not candidate.is_dir():
@@ -89,7 +89,7 @@ def main():
             "No archived GNN model weights were produced by the original runner.",
             "A PASS_COMPLETE verification confirms specific local checks, not a full scientific reproduction.",
             "P002 training MSE summaries are stochastic online minibatch statistics.",
-            "Keep repository PRIVATE unless the owner explicitly authorizes release.",
+            "Default inventory does not include all transformer or product-state logs; include explicitly with --extra-file before calling an archive complete.",\n            "Keep repository PRIVATE unless the owner explicitly authorizes release.",
             "Before distribution confirm licences, privacy, dataset size, and authorship.",
         ],
     }
