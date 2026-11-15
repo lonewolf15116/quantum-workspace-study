@@ -26,6 +26,23 @@ def select(rows):
     assert len(set(r["template"] for r in train))==16
     return train,within
 
+def kind_scores(model,features,rows,indices,device):
+    model.eval()
+    totals={"Z":[0.,0.,0],"ZZ":[0.,0.,0]}
+    with torch.inference_mode():
+        for batch_indices in np.array_split(indices,max(1,math.ceil(len(indices)/32))):
+            b=tensors(features,batch_indices,device)
+            pred=model(b).cpu().numpy()
+            for j,i in enumerate(batch_indices):
+                n=rows[int(i)]["n"]
+                target=features[int(i)]["y"]
+                for kind,a,bound in (("Z",0,n),("ZZ",n,n*(n+1)//2)):
+                    diff=np.abs(pred[j,a:bound]-target[a:bound])
+                    totals[kind][0]+=float(diff.sum())
+                    totals[kind][1]+=float(np.abs(target[a:bound]).sum())
+                    totals[kind][2]+=len(diff)
+    return {k:{"mae":v[0]/v[2],"zero_mae":v[1]/v[2]} for k,v in totals.items()}
+
 def main():
     p=argparse.ArgumentParser()
     p.add_argument("--data",default="p002_dataset")
@@ -84,7 +101,9 @@ def main():
             if step%100==0 or step==args.steps:
                 tr=score(model,features,train_i,args.device)
                 val=score(model,features,within_i,args.device)
-                record={"step":step,"train":tr,"within":val}
+                record={"step":step,"train":tr,"within":val,
+                        "train_by_observable":kind_scores(model,features,combined,train_i,args.device),
+                        "within_by_observable":kind_scores(model,features,combined,within_i,args.device)}
                 cf.write(json.dumps(record)+"\n");cf.flush()
                 print(json.dumps({"step":step,"train_mae":tr["mae"],"train_zero":tr["zero_mae"],
                     "within_mae":val["mae"],"within_zero":val["zero_mae"]}),flush=True)
