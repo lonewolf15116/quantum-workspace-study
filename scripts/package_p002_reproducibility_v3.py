@@ -19,6 +19,8 @@ REQUIRED = [
     "scripts/check_p002_product_state.py",
     "scripts/check_p002_dependencies_and_labels.py",
     "scripts/package_p002_reproducibility.py",
+    "scripts/package_p002_reproducibility_v3.py",
+    "scripts/reassemble_evidence.py",
     "SHA256SUMS",
     "p002_dependency_label_audit.json",
     "evidence/Workspace_Study_Pilot_P001.zip",
