@@ -35,3 +35,28 @@
 ## Writing constraints
 
 Use 'competitive zero predictor' rather than 'dominates all predictors'; 'under tested conditions' rather than 'intrinsically unlearnable'; 'consistent with a limited effective learning signal' rather than 'identified signal-starvation mechanism'; and distinguish stochastic online train MSE from exact held-out model MSE. Workspace intervention was not executed.
+
+## Supplementary literature sweep — 15 November 2026 (source-qualified)
+
+The following additional sources were verified against publisher or PMLR records. They **do not** replace the two closest comparisons above. Add only those that address a distinct concept in the paper; avoid padding the bibliography with loosely related quantum ML.
+
+| Additional study | Publisher/source | Scope relative to P002 | Evidentiary use |
+|---|---|---|---|
+| Karl, Kemeter, Dax & Sierak (2024), *Position: Embracing Negative Results in Machine Learning*, ICML/PMLR 235 | https://proceedings.mlr.press/v235/karl24a.html | General value and reporting incentives for negative ML studies | Supports motivation for publishing bounded negative results; **not** proof of empirical novelty |
+| Liao et al. (2026), *Demonstration of efficient predictive surrogates for large-scale quantum processors*, Nature Communications 17, 4731 | https://www.nature.com/articles/s41467-026-72506-5 | Surrogates for fixed layouts and noisy devices, practical quantum observables | Successful positive contrast; highlights importance of specified circuit distribution and data access |
+| Liao et al. (2026), *Sample-efficient quantum error mitigation via classical learning surrogates*, Communications Physics | https://www.nature.com/articles/s42005-026-02827-w | Surrogate-enabled zero-noise extrapolation | Related application, but **not** equivalent to the noiseless P002 target |
+| Nemkov (2025), *Statistical Models of Barren Plateaus and Anti-Concentration of Pauli Observables*, JETP Letters 122, 190–196 | https://link.springer.com/article/10.1134/S0021364025607511 | Pauli-observable concentration and quantum circuit barren-plateau statistics | Contextual physics mechanism; **do not conflate quantum-parameter gradient concentration with classical-network training dynamics** |
+| Petersen (2025), *Are You Doing Better Than Random Guessing?*, UAI/PMLR 286 | https://proceedings.mlr.press/v286/petersen25a.html | Negative controls in causal discovery benchmark metrics | Methodological analogy for trivial baselines, not a direct quantum-learning baseline |
+| Molteni, Gyurik & Dunjko (2026), *Exponential quantum advantages in learning quantum observables from classical data*, npj Quantum Information 12, 19 | https://www.nature.com/articles/s41534-025-01162-2 | Conditions for quantum/classical learning separations with measured-out classical data | Different access and target setting, **not** an impossibility result for P002 |
+
+### Thematic synthesis
+
+- **Direct novelty pressure:** Cantori–Pilati and Liu et al. remain the controlling prior art. P002 should not claim that random-angle difficulty or GNN circuit-observable prediction is new.
+- **Positive counterexamples:** Liao et al. illustrate that tailored surrogate tasks can succeed; broad surrogate-failure claims are inappropriate.
+- **Methodology:** Karl et al. and Petersen support framing as a reproducible benchmarking and negative-control case study, not a new loss-landscape theorem.
+- **Quantum-concentration context:** Nemkov and McClean et al. address quantum parameter/observable concentration, which cannot directly establish flat *classical surrogate* optimisation gradients.
+- **Reference quality:** These six entries have verified publisher/program records. Earlier entries in this matrix with arXiv-only metadata should remain tagged accordingly; total raw entries do not imply exhaustive coverage.
+
+### Bibliography triage
+
+**Core citations for revised manuscript:** Cantori–Pilati (2025), Liu et al. (2025), Liao et al. (2026, Nature Communications), Karl et al. (2024), McClean et al. (2018), Carleo & Troyer (2017), Huang–Kueng–Preskill (2020), Molteni et al. (2026). Add others sparingly when making the specific claim they support.
