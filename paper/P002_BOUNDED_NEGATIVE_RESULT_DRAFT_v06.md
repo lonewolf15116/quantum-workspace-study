@@ -71,7 +71,12 @@ The numerical closeness of zero, train-fitted mean and median illustrates that t
 
 We evaluated a transformer encoder under four exploratory exposure/data arms (B, A, K and L), each with three seeds; the archived protocol documents fix its input tokenisation and selected hyperparameters. Each reported transformer configuration uses the baseline without added workspace tokens. The transformer source is derived from a pinned P001 archive using four literal substitutions (embedding dimension 64→128, feedforward dimension 128→512, encoder layers 3→4, and a separate input-gather expansion from width 64 to 128). The explicit PyTorch encoder-layer call fixes four attention heads. The input packaging and positional/structural encodings inherit the archived model's `pack()` and `Model` implementation; their exact feature encoding and total parameter count are **not yet verified in the manuscript**. A read-only source auditor, `scripts/audit_p002_transformer_source.py`, has been added to extract the archived definitions and calculate the W=0 parameter count, but no output from it is available for this draft. These missing details must be filled from the report before making the source specification complete. The training runner fixes AdamW learning rate 0.001, weight decay 0.01, batch size 32, norm-1 gradient clipping, and evaluations every 64 updates. No LR scheduler or early-stopping rule is implemented in this runner; arms use fixed update counts.
 
-| Transformer arm | Training templates/cell | Training angles/template | Training examples across 63 cells | Updates | Seeds |\n|---|---:|---:|---:|---:|---|\n| B | 6 | 4 | 1,512 | 384 | 101, 202, 303 |\n| A | 6 | 20 | 7,560 | 384 | 101, 202, 303 |\n| K | 30 | 4 | 7,560 | 384 | 101, 202, 303 |\n| L | 6 | 4 | 1,512 | 1,920 | 101, 202, 303 |
+| Transformer arm | Training templates/cell | Training angles/template | Training examples across 63 cells | Updates | Seeds |
+|---|---:|---:|---:|---:|---|
+| B | 6 | 4 | 1,512 | 384 | 101, 202, 303 |
+| A | 6 | 20 | 7,560 | 384 | 101, 202, 303 |
+| K | 30 | 4 | 7,560 | 384 | 101, 202, 303 |
+| L | 6 | 4 | 1,512 | 1,920 | 101, 202, 303 |
 
 All transformer arms use the same d=128, 4-layer, 4-head, feedforward-512 W=0 encoder with fixed hyperparameters in this candidate experiment. Transformer conclusions remain restricted to this one instantiation and these four data/exposure arms.
 
