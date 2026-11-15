@@ -1,5 +1,7 @@
 # P002 — arXiv source preparation record (15 November 2026)
 
+> **Superseded after a one-word title clarification.** The current paper title adds **Quantum** before **Circuits**. Use [`P002_ARXIV_QUANTUM_TITLE_LOCAL_PASS_20261115.md`](P002_ARXIV_QUANTUM_TITLE_LOCAL_PASS_20261115.md) for the rebuilt source ZIP, PDF and metadata checksums. Hashes below are an accurate record of the **earlier, superseded** package and should not be used for the current upload.
+
 **Status:** Source package built and independently clean-folder compiled **locally**. **NOT SUBMITTED OR PUBLICLY RELEASED.** The generated binary files live in the conversation artifacts, not in this GitHub repository. This document is a reproducibility/change-control record; it is not evidence that arXiv accepted a submission.
 
 ## Manuscript
