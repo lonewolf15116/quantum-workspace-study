@@ -38,3 +38,12 @@
 5. Convert to arXiv-compatible format and obtain final author sign-off **before submission**.
 
 **Disposition: EDITORIAL MINOR REVISIONS — in progress.** No new training, no additional archive expansion, no public release, and no arXiv submission.
+
+
+## Final post-review title clarification — 15 November 2026
+
+**Adopted title (v0.12 and arXiv source):** *When Zero Is Competitive: A Descriptive Pilot of Transformer and Gate-Graph Surrogates on Random-Angle Quantum Circuits*.
+
+This adds **only the word “Quantum”** before “Circuits” relative to the fifth-round-reviewed title. The modification clarifies the domain of the underlying circuits; it does not change the task, models, experimental results, statistics, conclusions, or scope. The transformer and gate-graph surrogates remain **classical neural models** used to predict quantum-circuit observables; the title does **not** call them quantum neural networks. This is a post-review editorial clarification, not a new independent review.
+
+The change is reflected in the source manuscript `paper/P002_BOUNDED_NEGATIVE_RESULT_DRAFT_v012.md`, the LaTeX title and PDF metadata, the regenerated author preview, the arXiv form metadata, the local submission README/checklist, and the source-only ZIP. A separate GitHub preparation record logs the new file hashes; prior ZIP hashes describe superseded, earlier files and must not be used for the revised package. The private P002 evidence archive remains unchanged and unsubmitted.
