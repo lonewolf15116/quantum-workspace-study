@@ -68,8 +68,38 @@ def run(root):
         if not all(ready):continue
         try:
             identity=read(paths[0])
-            if identity.get("layers")!=layers or identity.get("steps")!=7680 or identity.get("train_n")!=7560:
-                rep["errors"].append(dirname+": identity mismatch")
+            # The original D12 run predates the explicit "layers" identity key.
+            # Allow that ONE legacy omission only when all other recorded
+            # identity fields, including the 823809 parameter count, match.
+            expected_params={12:823809,24:1604865,40:2646273}[layers]
+            recorded_layers=identity.get("layers")
+            legacy_d12=(layers==12 and recorded_layers is None
+                        and identity.get("parameters")==823809)
+            matches=(identity.get("protocol")=="P002-GRAPH-001-CANDIDATE"
+                     and identity.get("arm")=="K"
+                     and identity.get("seed")==202
+                     and identity.get("steps")==7680
+                     and identity.get("train_n")==7560
+                     and identity.get("within_n")==7560
+                     and identity.get("holdout_n")==504
+                     and identity.get("parameters")==expected_params
+                     and (recorded_layers==layers or legacy_d12))
+            if not matches:
+                rep["errors"].append(
+                    dirname+": identity mismatch; observed="
+                    +json.dumps({key:identity.get(key) for key in
+                        ("protocol","arm","seed","layers","steps",
+                         "train_n","within_n","holdout_n","parameters")},
+                        sort_keys=True))
+            elif legacy_d12:
+                rep["checked"].append(
+                    dirname+" legacy D12 identity (layers missing; parameters=823809)")
+                rep["limitations"].append(
+                    "Original D12 identity has no layers field; accepted as legacy "
+                    "D12 using expected parameter count and other metadata, "
+                    "not independent source-to-experiment proof.")
+            else:
+                rep["checked"].append(dirname+" identity metadata")
             logs=[json.loads(x) for x in paths[1].read_text().splitlines() if x.strip()]
             final=[x for x in logs if x["step"]==7680]
             if len(final)!=1:rep["errors"].append(dirname+": no unique final checkpoint")
